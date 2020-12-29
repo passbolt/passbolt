@@ -9,8 +9,8 @@
     "config": {
       "optimize-autoloader": true,
       "platform": {
-        "php": "7.0.33"
-      }
+            "php": "7.4.3"
+        }
     },
     "homepage": "https://www.passbolt.com",
     "license": "AGPL-3.0-or-later",
@@ -51,7 +51,9 @@
         "donatj/phpuseragentparser": "^0.7.0",
         "lorenzo/cakephp-email-queue": "^3.3.1",
         "burzum/cakephp-file-storage": "^2.1.0",
-        "burzum/cakephp-imagine-plugin": "3.x-dev"
+        "burzum/cakephp-imagine-plugin": "3.x-dev",
+        "phar-io/gnupg": "^1.0",
+        "pear/crypt_gpg": "^1.6"
     },
     "require-dev": {
         "psy/psysh": "@stable",

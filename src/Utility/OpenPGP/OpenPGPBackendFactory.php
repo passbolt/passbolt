@@ -15,6 +15,7 @@
 namespace App\Utility\OpenPGP;
 
 use App\Utility\OpenPGP\Backends\Gnupg;
+use App\Utility\OpenPGP\Backends\CryptGPG;
 use Cake\Core\Configure;
 use Cake\Core\Exception\Exception;
 use Cake\Http\Exception\InternalErrorException;
@@ -22,6 +23,7 @@ use Cake\Http\Exception\InternalErrorException;
 class OpenPGPBackendFactory
 {
     const GNUPG = 'gnupg';
+    const CRYPT_GPG = 'cryptGPG';
 
     /**
      * @var OpenPGPBackend
@@ -41,6 +43,13 @@ class OpenPGPBackendFactory
             case self::GNUPG:
                 try {
                     return new Gnupg();
+                } catch (Exception $exception) {
+                    throw new InternalErrorException($exception->getMessage());
+                }
+                break;
+            case self::CRYPT_GPG:
+                try {
+                    return new CryptGPG();
                 } catch (Exception $exception) {
                     throw new InternalErrorException($exception->getMessage());
                 }

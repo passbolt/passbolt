@@ -92,6 +92,7 @@ class GpgHealthchecks
     {
         switch (Configure::read('passbolt.gpg.backend')) {
             case OpenPGPBackendFactory::GNUPG:
+            case OpenPGPBackendFactory::CRYPT_GPG:
                 // If no keyring location has been set, use the default one ~/.gnupg.
                 $gnupgHome = getenv('GNUPGHOME');
                 if (empty($gnupgHome)) {

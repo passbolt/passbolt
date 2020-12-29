@@ -110,6 +110,18 @@ return [
             // Replace GNUPGHOME with above value even if it is set.
             //'putenv' => false,
 
+            // Which backend to use for encryption:
+            // - 'gnupg' uses the php gnupg extension.
+            // - 'cryptGPG' uses the pecl Crypt_GPG package instead (requires the gpg command but not the gnupg extension)
+            'backend' => 'gnupg',
+
+            // Additional options for the constructor of the Crypt_GPG php class.
+            // These settings are only used when backend is set to 'cryptGPG'.
+            // See: Crypt_GPGAbstract::__construct (https://pear.php.net/package/Crypt_GPG/docs/latest/Crypt_GPG/Crypt_GPGAbstract.html)
+            // for a full list of options.
+            //'cryptGpg' => [
+            //],
+
             // Main server key.
             'serverKey' => [
                 // Server private key fingerprint.
