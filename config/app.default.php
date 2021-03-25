@@ -97,12 +97,17 @@ return [
          * If you set 'className' => 'Null' core cache will be disabled.
          */
         '_cake_core_' => [
-            'className' => 'File',
+            'className' => env('CACHE_ENGINE', 'File'),
+            'host' => env('CACHE_ENGINE_HOST', null),
+            'port' => env('CACHE_ENGINE_PORT', null),
+            'password' => env('CACHE_ENGINE_PASSWORD', null),
+            'database' => env('CACHE_ENGINE_DATABASE_CORE', null),
             'prefix' => 'myapp_cake_core_',
             'path' => CACHE . 'persistent/',
             'serialize' => true,
             'duration' => '+1 years',
             'url' => env('CACHE_CAKECORE_URL', null),
+            'fallback' => 'default',
         ],
 
         /**
@@ -112,12 +117,17 @@ return [
          * Duration will be set to '+2 minutes' in bootstrap.php when debug = true
          */
         '_cake_model_' => [
-            'className' => 'File',
+            'className' => env('CACHE_ENGINE', 'File'),
+            'host' => env('CACHE_ENGINE_HOST', null),
+            'port' => env('CACHE_ENGINE_PORT', null),
+            'password' => env('CACHE_ENGINE_PASSWORD', null),
+            'database' => env('CACHE_ENGINE_DATABASE_MODEL', null),
             'prefix' => 'myapp_cake_model_',
             'path' => CACHE . 'models/',
             'serialize' => true,
             'duration' => '+1 years',
             'url' => env('CACHE_CAKEMODEL_URL', null),
+            'fallback' => 'default',
         ],
     ],
 
