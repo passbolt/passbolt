@@ -121,7 +121,7 @@ class V320FixResourceTypesDefaultData extends AbstractMigration
             ]),
         ];
         foreach ($toUpdate as $id => $definition) {
-            $sql = "UPDATE `resource_types` SET `definition`= '$definition' WHERE `id` = '$id'";
+            $sql = "UPDATE resource_types SET definition= '$definition' WHERE id = '$id'";
             $this->execute($sql);
         }
     }

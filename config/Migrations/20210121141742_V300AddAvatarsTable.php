@@ -27,17 +27,15 @@ class V300AddAvatarsTable extends AbstractMigration
     public function up()
     {
         $this->table('avatars', ['id' => false, 'primary_key' => ['id'], 'collation' => 'utf8mb4_unicode_ci'])
-            ->addColumn('id', 'char', [
+            ->addColumn('id', 'uuid', [
                 'default' => null,
-                'limit' => 36,
                 'null' => false,
             ])
             ->addColumn('data', 'blob', [
                 'default' => null,
                 'null' => true,
             ])
-            ->addColumn('profile_id', 'char', [
-                'limit' => 36,
+            ->addColumn('profile_id', 'uuid', [
                 'null' => false,
             ])
             ->addColumn('created', 'datetime', [

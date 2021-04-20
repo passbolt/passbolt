@@ -26,9 +26,9 @@ trait DatabaseTrait
     public function truncateTables()
     {
         $connection = ConnectionManager::get('default');
-        $tables = $connection->execute('SHOW TABLES')->fetchAll();
+        $tables = ConnectionManager::get('default')->getSchemaCollection()->listTables();
         foreach ($tables as $table) {
-            $quotedTableName = $connection->getDriver()->quoteIdentifier($table[0]);
+            $quotedTableName = $connection->getDriver()->quoteIdentifier($table);
             $connection->query("DROP TABLE {$quotedTableName}");
         }
     }

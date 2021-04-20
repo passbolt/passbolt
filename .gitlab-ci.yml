@@ -1,11 +1,10 @@
 image: alpine:latest
-
 variables:
-  DOCKER_HOST: tcp://localhost:2375
-  DOCKER_DRIVER: overlay2
   DOCKER_TLS_CERTDIR: ""
 
+
 stages:
+#  - test
   - unit-test
   - package-deps
   - package-build
@@ -14,11 +13,14 @@ stages:
   - publish
 
 include:
-  - template: Code-Quality.gitlab-ci.yml
+#  - template: Code-Quality.gitlab-ci.yml
   - local: '/.gitlab-ci/Jobs/php_unit_tests.yml'
-  - local: '/.gitlab-ci/Jobs/artifact_build.yml'
-  - local: '/.gitlab-ci/Jobs/debian_package_build.yml'
+#  - local: '/.gitlab-ci/Jobs/artifact_build.yml'
+#  - local: '/.gitlab-ci/Jobs/debian_package_build.yml'
   - local: '/.gitlab-ci/Jobs/style_check.yml'
 
-code_quality:
-  stage: unit-test
+cache:
+  paths:
+    - vendor/
+
+

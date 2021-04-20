@@ -361,7 +361,15 @@ class FindIndexTest extends AppTestCase
         $groups = $this->Groups->findIndex($findIndexOptions)->all()->toArray();
         $this->assertEquals($groups[0]->id, UuidFactory::uuid('group.id.accounting'));
 
+        $findIndexOptions = ['order' => 'Groups.name ASC'];
+        $groups = $this->Groups->findIndex($findIndexOptions)->all()->toArray();
+        $this->assertEquals($groups[0]->id, UuidFactory::uuid('group.id.accounting'));
+
         $findIndexOptions = ['order' => ['Groups.name DESC']];
+        $groups = $this->Groups->findIndex($findIndexOptions)->all()->toArray();
+        $this->assertEquals($groups[0]->id, UuidFactory::uuid('group.id.traffic'));
+
+        $findIndexOptions = ['order' => 'Groups.name DESC'];
         $groups = $this->Groups->findIndex($findIndexOptions)->all()->toArray();
         $this->assertEquals($groups[0]->id, UuidFactory::uuid('group.id.traffic'));
     }

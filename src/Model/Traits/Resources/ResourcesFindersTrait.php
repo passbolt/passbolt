@@ -24,6 +24,7 @@ use App\Model\Table\PermissionsTable;
 use App\Model\Table\ResourceTypesTable;
 use Cake\Collection\CollectionInterface;
 use Cake\Core\Configure;
+use Cake\Database\Expression\IdentifierExpression;
 use Cake\ORM\Query;
 use Cake\Validation\Validation;
 
@@ -102,8 +103,8 @@ trait ResourcesFindersTrait
                 $subQueryOptions = ['checkGroupsUsers' => true];
                 $permissionIdSubQuery = $this->Permissions
                     ->findAllByAro(PermissionsTable::RESOURCE_ACO, $userId, $subQueryOptions)
-                    ->where(['Permissions.aco_foreign_key = Resources.id'])
-                    ->order(['Permissions.type DESC'])
+                    ->where(['Permissions.aco_foreign_key' => new IdentifierExpression('Resources.id')])
+                    ->orderDesc('Permissions.type')
                     ->limit(1)
                     ->select(['Permissions.id']);
 
@@ -166,6 +167,8 @@ trait ResourcesFindersTrait
         // approach prior to pagination.
         if (isset($options['order']['Resources.modified'])) {
             $query->order('Resources.modified DESC');
+        } else {
+            $query->orderAsc('Resources.name');
         }
 
         // Remove resource type if plugin is disabled

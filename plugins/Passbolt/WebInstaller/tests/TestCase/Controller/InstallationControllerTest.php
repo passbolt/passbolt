@@ -254,12 +254,12 @@ UZNFZWTIXO4n0jwpTTOt6DvtqeRyjjw2nK3XUSiJu3izvn0791l4tofy
         $config = $this->getInstallSessionData();
         $this->initWebInstallerSession($config);
 
-        $tables = $connection->execute('SHOW TABLES')->fetchAll();
+        $tables = $connection->getSchemaCollection()->listTables();
         $this->assertEmpty($tables);
 
         $this->get('/install/installation/do_install.json');
 
-        $tables = $connection->execute('SHOW TABLES')->fetchAll();
+        $tables = $connection->getSchemaCollection()->listTables();
         $this->assertNotEmpty($tables);
 
         $result = json_decode($this->_getBodyAsString(), true);

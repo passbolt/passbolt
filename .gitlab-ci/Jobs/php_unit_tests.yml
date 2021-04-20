@@ -1,22 +1,69 @@
-.test-template:
+.php_common_prepare: &php_prepare
+  - apt-get update -yqq
+  - apt-get install mariadb-client -yqq
+  - apt-get install wget git unzip -yqq
+  - apt-get install libgpgme11 libgpgme-dev -yqq
+  - pecl install gnupg
+  - apt-get install zlib1g-dev libicu-dev -yqq
+  - docker-php-ext-install intl
+  - docker-php-ext-enable gnupg
+  - docker-php-ext-enable intl
+  - apt-get install libjpeg-dev libpng-dev libfreetype6-dev -yqq
+  - |-
+    if [[ $PHP_VERSION = "7.4" ]]; then
+      docker-php-ext-configure gd --with-freetype  --with-jpeg
+    else
+      docker-php-ext-configure gd --with-freetype-dir=/usr --with-jpeg-dir=/usr
+    fi
+  - docker-php-ext-install gd
+  - docker-php-ext-enable gd
+  - wget https://composer.github.io/installer.sig -O - -q | tr -d '\n' > installer.sig
+  - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+  - php -r "if (hash_file('SHA384', 'composer-setup.php') === file_get_contents('installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+  - php composer-setup.php
+  - php -r "unlink('composer-setup.php'); unlink('installer.sig');"
+  - cp config/app.default.php config/app.php
+  - php composer.phar install --dev --no-interaction
+
+.php_mysql_prepare: &php_mysql_prepare
+  - docker-php-ext-install pdo_mysql
+  - docker-php-ext-enable pdo_mysql
+.php_postgres_prepare: &php_postgres_prepare
+  # Create the file repository configuration:
+  - sh -c 'echo "deb http://apt.postgresql.org/pub/repos/apt buster-pgdg main" > /etc/apt/sources.list.d/pgdg.list'
+
+# Import the repository signing key:
+  - wget --quiet -O - https://www.postgresql.org/media/keys/ACCC4CF8.asc | tee ~/apt-pg.key 
+  - apt-key add  ~/apt-pg.key
+
+# Update the package lists:
+  - apt-get update
+
+# Install the latest version of PostgreSQL.
+# If you want a specific version, use 'postgresql-12' or similar instead of 'postgresql':
+  - apt-get install postgresql-client-12 -yqq
+  - apt-get install libpq-dev -yqq
+  - docker-php-ext-install pdo_pgsql
+  - docker-php-ext-enable pdo_pgsql
+  - apt-get install postgresql-client-12 -yqq
+.postgres-template:
   stage: unit-test
   variables:
-    # MySQL services variables
-    MYSQL_USER: user
-    MYSQL_PASSWORD: testing-password
-    MYSQL_ROOT_PASSWORD: testing-password2
-    MYSQL_DATABASE: test
-
+    POSTGRES_USER: user
+    POSTGRES_DATABASE: test
+    POSTGRES_DB: test
+    POSTGRES_PASSWORD: "testing-password"
+    POSTGRES_HOST_AUTH_METHOD: trust
     # Passbolt unit test job common variables
     DEBUG: "true"
-    DATASOURCES_DEFAULT_DATABASE: non_existing_database # to ensure that all tests run on the test datasource
-    DATASOURCES_DEFAULT_USERNAME: $MYSQL_USER
-    DATASOURCES_DEFAULT_PASSWORD: $MYSQL_PASSWORD
-    DATASOURCES_DEFAULT_HOST: 127.0.0.1
-    DATASOURCES_TEST_DATABASE: $MYSQL_DATABASE
-    DATASOURCES_TEST_USERNAME: $MYSQL_USER
-    DATASOURCES_TEST_PASSWORD: $MYSQL_PASSWORD
-    DATASOURCES_TEST_HOST: 127.0.0.1
+    DATASOURCES_DEFAULT_DATABASE: $POSTGRES_DATABASE
+    DATASOURCES_DEFAULT_USERNAME: $POSTGRES_USER
+    DATASOURCES_DEFAULT_PASSWORD: $POSTGRES_PASSWORD
+    DATASOURCES_DEFAULT_HOST: postgres
+    DATASOURCES_TEST_DATABASE: $POSTGRES_DATABASE
+    DATASOURCES_TEST_USERNAME: $POSTGRES_USER
+    DATASOURCES_TEST_PASSWORD: $POSTGRES_PASSWORD
+    DATASOURCES_TEST_HOST: postgres
     PASSBOLT_GPG_SERVER_KEY_PUBLIC: config/gpg/unsecure.key
     PASSBOLT_GPG_SERVER_KEY_PRIVATE: config/gpg/unsecure_private.key
     APP_FULL_BASE_URL: http://127.0.0.1
@@ -25,19 +72,80 @@
     # This is the development dummy fingerprint
     PASSBOLT_GPG_SERVER_KEY_FINGERPRINT: 2FC8945833C51946E937F9FED47B0811573EE67E
     PHPUNIT_COMMAND: vendor/bin/phpunit --log-junit unitreport.xml
+  image: php:$PHP_VERSION
   services:
   - name: $DATABASE_ENGINE_VERSION
-    command:
+    alias: postgres
+  script:
+    - *php_prepare
+    - *php_postgres_prepare
+    - export DATASOURCES_DRIVER="Cake\Database\Driver\Postgres"
+    - export DATASOURCES_TEST_DRIVER="Cake\Database\Driver\Postgres"
+    - export DATASOURCES_DEFAULT_DRIVER="Cake\Database\Driver\Postgres"
+    - export DATASOURCES_PORT=5432
+    - export DATASOURCES_DEFAULT_PORT=5432
+    - export DATASOURCES_DEFAULT_ENCODING='utf8'
+    - export DATASOURCES_TEST_ENCODING='utf8'
+    - export DATASOURCES_TEST_PORT=5432
+    - gpg --import config/gpg/unsecure_private.key
+    - gpg --import config/gpg/unsecure.key
+    - printf "postgres:5432:test:user:testing-password" > ~/.pgpass
+    - chmod 0600 ~/.pgpass
+    - $PHPUNIT_COMMAND
+  only:
+    - branches
+  artifacts:
+    reports:
+      junit: unitreport.xml
+  except:
+    variables:
+      - $CI_COMMIT_MESSAGE =~ /skip-unit/
+.test-template:
+  stage: unit-test
+  variables:
+    # MySQL services variables
+    MYSQL_USER: user
+    MYSQL_PASSWORD: testing-password
+    MYSQL_ROOT_PASSWORD: testing-password2
+    MYSQL_DATABASE: test
+    MYSQL_HOST: mysql
+    POSTGRES_USER: user
+    POSTGRES_DB: test
+    POSTGRES_PASSWORD: "testing-password"
+    POSTGRES_HOST_AUTH_METHOD: md5
+
+    # Passbolt unit test job common variables
+    DEBUG: "true"
+    DATASOURCES_DEFAULT_DATABASE: non_existing_database # to ensure that all tests run on the test datasource
+    DATASOURCES_DEFAULT_USERNAME: $MYSQL_USER
+    DATASOURCES_DEFAULT_PASSWORD: $MYSQL_PASSWORD
+    DATASOURCES_DEFAULT_HOST: mysql
+    DATASOURCES_TEST_DATABASE: $MYSQL_DATABASE
+    DATASOURCES_TEST_USERNAME: $MYSQL_USER
+    DATASOURCES_TEST_PASSWORD: $MYSQL_PASSWORD
+    DATASOURCES_TEST_HOST: mysql
+    PASSBOLT_GPG_SERVER_KEY_PUBLIC: config/gpg/unsecure.key
+    PASSBOLT_GPG_SERVER_KEY_PRIVATE: config/gpg/unsecure_private.key
+    APP_FULL_BASE_URL: http://127.0.0.1
+    PASSBOLT_REGISTRATION_PUBLIC: 1
+    PASSBOLT_SELENIUM_ACTIVE: 1
+    # This is the development dummy fingerprint
+    PASSBOLT_GPG_SERVER_KEY_FINGERPRINT: 2FC8945833C51946E937F9FED47B0811573EE67E
+    PHPUNIT_COMMAND: vendor/bin/phpunit --log-junit unitreport.xml
+  image: php:$PHP_VERSION
+  services:
+  - name: $DATABASE_ENGINE_VERSION
+    command: #needed for mysql8 --log-bin-trust-function-creators=1
       - /bin/bash
       - -c
       - |
         mount -t tmpfs -o size=1024m tmpfs /var/lib/mysql
         docker-entrypoint.sh mysqld --default-authentication-plugin=mysql_native_password --log-bin-trust-function-creators=1
-  image: $CI_REGISTRY_IMAGE_TEST:$PHP_VERSION
+    alias: mysql
   script:
-    - init_test_db
-    - cp config/app.default.php config/app.php
-    - composer install --dev --no-interaction
+    - *php_prepare
+    - *php_mysql_prepare
+    #- export DATASOURCES_TEST_HOST=mysql
     - gpg --import config/gpg/unsecure_private.key
     - gpg --import config/gpg/unsecure.key
     - $PHPUNIT_COMMAND
@@ -111,11 +219,9 @@ php7.4-mysql8:
     - develop
     - master
 
-.custom_functions: &custom_functions |
+php7.4-postgres:
+  variables:
+    PHP_VERSION: "7.4"
+    DATABASE_ENGINE_VERSION: "postgres:12.2-alpine"
+  extends: .postgres-template
 
-  function init_test_db() {
-    mysql -h $DATASOURCES_DEFAULT_HOST -u root -p$MYSQL_ROOT_PASSWORD -e "GRANT ALL ON *.* to $DATASOURCES_TEST_USERNAME@'%' identified by '$DATASOURCES_TEST_PASSWORD';" mysql
-  }
-
-before_script:
-  - *custom_functions

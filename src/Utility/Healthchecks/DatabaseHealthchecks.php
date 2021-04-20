@@ -80,7 +80,7 @@ class DatabaseHealthchecks
         $checks['database']['supportedBackend'] = false;
         $connection = ConnectionManager::get($datasource);
         $config = $connection->config();
-        if ($config['driver'] === 'Cake\Database\Driver\Mysql') {
+        if (in_array($config['driver'], ['Cake\Database\Driver\Mysql', 'Cake\Database\Driver\Postgres'])) {
             $checks['database']['supportedBackend'] = true;
         }
 
@@ -99,8 +99,8 @@ class DatabaseHealthchecks
         $checks['database']['info']['tablesCount'] = 0;
         $checks['database']['tablesCount'] = false;
         try {
-            $connection = ConnectionManager::get($datasource);
-            $tables = $connection->execute('show tables')->fetchAll('assoc');
+            $connection = ConnectionManager::get('default');
+            $tables = $connection->getSchemaCollection()->listTables();
 
             if (isset($tables) && count($tables)) {
                 $checks['database']['tablesCount'] = (count($tables) > 0);

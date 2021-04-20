@@ -19,7 +19,12 @@ namespace App\Command;
 use Cake\Console\Arguments;
 use Cake\Console\ConsoleIo;
 use Cake\Console\ConsoleOptionParser;
+use Cake\Database\Connection;
+use Cake\Database\Driver\Mysql;
+use Cake\Database\Driver\Postgres;
+use Cake\Database\DriverInterface;
 use Cake\Datasource\ConnectionManager;
+use Cake\Datasource\Exception\MissingDatasourceConfigException;
 
 class MysqlExportCommand extends PassboltCommand
 {
@@ -69,13 +74,13 @@ class MysqlExportCommand extends PassboltCommand
         parent::execute($args, $io);
 
         // Check if the data source is in the config
+        /** @var string $datasource */
         $datasource = $args->getOption('datasource');
-        $connection = ConnectionManager::get($datasource);
-
-        // Check the database support
-        $config = $connection->config();
-        if ($config['driver'] !== 'Cake\Database\Driver\Mysql') {
-            $this->error('Sorry only mySQL is supported at the moment', $io);
+        try {
+            /** @var \Cake\Database\Connection $connection */
+            $connection = ConnectionManager::get($datasource);
+        } catch (MissingDatasourceConfigException $e) {
+            $this->error($e->getMessage(), $io);
 
             return $this->errorCode();
         }
@@ -90,7 +95,7 @@ class MysqlExportCommand extends PassboltCommand
         if (empty($file)) {
             return $this->errorCode();
         }
-        $status = $this->mysqlDump($config, $dir, $file, $io);
+        $status = $this->dump($connection, $dir, $file, $io);
         if (!$status) {
             $this->error('Something went wrong!', $io);
 
@@ -109,13 +114,47 @@ class MysqlExportCommand extends PassboltCommand
     /**
      * Perform a mysqldump command
      *
-     * @param array $config connection manager config
+     * @param \Cake\Database\Connection $connection connection manager config
      * @param string $dir directory path
      * @param string $file file name
      * @param \Cake\Console\ConsoleIo $io Console IO.
      * @return bool
      */
-    protected function mysqlDump($config, $dir, $file, ConsoleIo $io): bool
+    protected function dump(Connection $connection, $dir, $file, ConsoleIo $io): bool
+    {
+        $io->info('Saving backup file: ' . $dir . $file);
+
+        if ($connection->getDriver() instanceof Mysql) {
+            $status = $this->mysqlDump($connection->config(), $dir, $file);
+        } elseif ($connection->getDriver() instanceof Postgres) {
+            $status = $this->postgresDump($connection->config(), $dir, $file);
+        } else {
+            $this->error('Sorry only MySQL and PostgreSQL are supported at the moment', $io);
+
+            return false;
+        }
+
+        if ($status !== $this->successCode()) {
+            $io->quiet(__('There was an error running the dump.'));
+            $io->error(__('Please ensure on MySQL that the user has PROCESS privileges.'));
+            $io->error(__('Database ') . $connection->config()['database']);
+            $io->error(__('User ') . $connection->config()['username']);
+
+            return false;
+        }
+
+        return true;
+    }
+
+    /**
+     * MySQL dump
+     *
+     * @param array $config Databse config
+     * @param string $dir Target directory
+     * @param string $file Target file
+     * @return int
+     */
+    protected function mysqlDump(array $config, string $dir, string $file): int
     {
         // Build the dump command.
         $cmd = 'mysqldump -h' . escapeshellarg($config['host']) . ' -u' . escapeshellarg($config['username']);
@@ -123,20 +162,39 @@ class MysqlExportCommand extends PassboltCommand
             $cmd .= ' -p' . escapeshellarg($config['password']);
         }
         $cmd .= ' ' . escapeshellarg($config['database']) . ' > ' . $dir . $file;
-        $io->out('Saving backup file: ' . $dir . $file);
         exec($cmd, $output, $status);
-        if ($status !== $this->successCode()) {
-            $io->quiet(__('There was an error running mysqldump.'));
-            $userName = $config['username'];
-            $dbName = $config['database'];
-            $io->error(__('Please ensure that the user has PROCESS privileges.'));
-            $io->error(__('Database ') . $dbName);
-            $io->error(__('User ') . $userName);
 
-            return false;
-        }
+        return $status;
+    }
 
-        return $status === $this->successCode();
+    /**
+     * PostgreSQL dump
+     *
+     * @param array $config Databse config
+     * @param string $dir Target directory
+     * @param string $file Target file
+     * @return int
+     */
+    protected function postgresDump(array $config, string $dir, string $file): int
+    {
+        // Build the dump command.
+        // Credentials are provided in ~/.pgpass
+        $cmd = 'pg_dump -h ' . escapeshellarg($config['host']) . ' -U ' . escapeshellarg($config['username']);
+        $cmd .= ' -w -d ' . escapeshellarg($config['database']) . ' > ' . $dir . $file;
+        exec($cmd, $output, $status);
+
+        return $status;
+    }
+
+    /**
+     * Check if the driver is supported by Passbolt.
+     *
+     * @param \Cake\Database\DriverInterface $driver Driver to assess.
+     * @return bool
+     */
+    protected function isSupportedDriver(DriverInterface $driver): bool
+    {
+        return $driver instanceof Mysql || $driver instanceof Postgres;
     }
 
     /**

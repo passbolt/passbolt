@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "4935f60fc14a0414c7590117a1027a19",
+    "content-hash": "cbe415230c2b04789344506062bd9290",
     "packages": [
         {
             "name": "bcrowe/cakephp-api-pagination",
@@ -371,7 +371,7 @@
                 "cakephp/cache": "^4.0.5",
                 "cakephp/orm": "^4.0.5",
                 "php": ">=7.2.0",
-                "robmorgan/phinx": "^0.12"
+                "robmorgan/phinx": "dev-pgsql-int-to-boolean#6e4f410b5f569fac6166f5d8ea22a230646c34f9"
             },
             "require-dev": {
                 "cakephp/bake": "^2.1.0",
@@ -1941,22 +1941,22 @@
         },
         {
             "name": "robmorgan/phinx",
-            "version": "0.12.1",
+            "version": "dev-pgsql-int-to-boolean",
             "source": {
                 "type": "git",
-                "url": "https://github.com/cakephp/phinx.git",
-                "reference": "94d0b78f68bfb20aac4c59b0b3ff49956803fc70"
+                "url": "https://github.com/jsm222/phinx.git",
+                "reference": "6e4f410b5f569fac6166f5d8ea22a230646c34f9"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/cakephp/phinx/zipball/94d0b78f68bfb20aac4c59b0b3ff49956803fc70",
-                "reference": "94d0b78f68bfb20aac4c59b0b3ff49956803fc70",
+                "url": "https://api.github.com/repos/jsm222/phinx/zipball/6e4f410b5f569fac6166f5d8ea22a230646c34f9",
+                "reference": "6e4f410b5f569fac6166f5d8ea22a230646c34f9",
                 "shasum": ""
             },
             "require": {
-                "cakephp/collection": "^4.0",
                 "cakephp/database": "^4.0",
                 "php": ">=7.2",
+                "psr/container": "^1.0 || ^2.0",
                 "symfony/config": "^3.4|^4.0|^5.0",
                 "symfony/console": "^3.4|^4.0|^5.0"
             },
@@ -1964,7 +1964,7 @@
                 "cakephp/cakephp-codesniffer": "^3.0",
                 "ext-json": "*",
                 "ext-pdo": "*",
-                "phpunit/phpunit": "^8.5",
+                "phpunit/phpunit": "^8.5|^9.3",
                 "sebastian/comparator": ">=1.2.3",
                 "symfony/yaml": "^3.4|^4.0|^5.0"
             },
@@ -1982,7 +1982,32 @@
                     "Phinx\\": "src/Phinx/"
                 }
             },
-            "notification-url": "https://packagist.org/downloads/",
+            "autoload-dev": {
+                "psr-4": {
+                    "Test\\Phinx\\": "tests/Phinx/"
+                }
+            },
+            "scripts": {
+                "check": [
+                    "@test",
+                    "@cs-check"
+                ],
+                "cs-check": [
+                    "phpcs -np app/ src/ tests/"
+                ],
+                "cs-fix": [
+                    "phpcbf -np app/ src/ tests/"
+                ],
+                "stan": [
+                    "phpstan analyse src/"
+                ],
+                "stan-setup": [
+                    "cp composer.json composer.backup && composer require --dev phpstan/phpstan:^0.12 && mv composer.backup composer.json"
+                ],
+                "test": [
+                    "phpunit --colors=always"
+                ]
+            },
             "license": [
                 "MIT"
             ],
@@ -2006,8 +2031,8 @@
                 },
                 {
                     "name": "CakePHP Community",
-                    "homepage": "https://github.com/cakephp/phinx/graphs/contributors",
-                    "role": "Developer"
+                    "role": "Developer",
+                    "homepage": "https://github.com/cakephp/phinx/graphs/contributors"
                 }
             ],
             "description": "Phinx makes it ridiculously easy to manage the database migrations for your PHP app.",
@@ -2019,11 +2044,7 @@
                 "migrations",
                 "phinx"
             ],
-            "support": {
-                "issues": "https://github.com/cakephp/phinx/issues",
-                "source": "https://github.com/cakephp/phinx/tree/master"
-            },
-            "time": "2020-04-11T07:17:48+00:00"
+            "time": "2021-04-17T08:05:02+00:00"
         },
         {
             "name": "singpolyma/openpgp-php",
@@ -6851,16 +6872,16 @@
         },
         {
             "name": "vierge-noire/cakephp-fixture-factories",
-            "version": "v2.2",
+            "version": "v2.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/vierge-noire/cakephp-fixture-factories.git",
-                "reference": "160eb8bcbfe0f302a6c8f638a6a387ecb9272f0d"
+                "reference": "aff688a4d2413ae7f7e833f7f517a0f6c52bf7e8"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/vierge-noire/cakephp-fixture-factories/zipball/160eb8bcbfe0f302a6c8f638a6a387ecb9272f0d",
-                "reference": "160eb8bcbfe0f302a6c8f638a6a387ecb9272f0d",
+                "url": "https://api.github.com/repos/vierge-noire/cakephp-fixture-factories/zipball/aff688a4d2413ae7f7e833f7f517a0f6c52bf7e8",
+                "reference": "aff688a4d2413ae7f7e833f7f517a0f6c52bf7e8",
                 "shasum": ""
             },
             "require": {
@@ -6906,9 +6927,9 @@
             ],
             "support": {
                 "issues": "https://github.com/vierge-noire/cakephp-fixture-factories/issues",
-                "source": "https://github.com/vierge-noire/cakephp-fixture-factories/tree/v2.2"
+                "source": "https://github.com/vierge-noire/cakephp-fixture-factories/tree/v2.2.1"
             },
-            "time": "2021-02-09T17:20:41+00:00"
+            "time": "2021-04-15T10:20:05+00:00"
         },
         {
             "name": "vierge-noire/cakephp-test-migrator",
@@ -7074,6 +7095,7 @@
     "aliases": [],
     "minimum-stability": "stable",
     "stability-flags": {
+        "robmorgan/phinx": 20,
         "singpolyma/openpgp-php": 20,
         "psy/psysh": 0,
         "passbolt/cakephp-codesniffer": 20

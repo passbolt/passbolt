@@ -282,19 +282,12 @@ return [
     'Datasources' => [
         'default' => [
             'className' => Connection::class,
-            'driver' => Mysql::class,
+            'driver' => env('DATASOURCES_DEFAULT_DRIVER', Mysql::class),
             'persistent' => false,
             'timezone' => 'UTC',
 
             /*
              * For MariaDB/MySQL the internal default changed from utf8 to utf8mb4, aka full utf-8 support
-             */
-            'encoding' => 'utf8mb4',
-
-            /*
-             * If your MySQL server is configured with `skip-character-set-client-handshake`
-             * then you MUST use the `flags` config to set your charset encoding.
-             * For e.g. `'flags' => [\PDO::MYSQL_ATTR_INIT_COMMAND => 'SET NAMES utf8mb4']`
              */
             'flags' => [],
             'cacheMetadata' => true,
@@ -333,6 +326,7 @@ return [
             'ssl_key' => env('DATASOURCES_DEFAULT_SSL_KEY', ''),
             'ssl_cert' => env('DATASOURCES_DEFAULT_SSL_CERT', ''),
             'ssl_ca' => env('DATASOURCES_DEFAULT_SSL_CA', ''),
+            'encoding' => env('DATASOURCES_DEFAULT_ENCODING','utf8mb4'),
 
         ],
 
@@ -344,7 +338,7 @@ return [
             'driver' => env('DATASOURCES_TEST_DRIVER', Mysql::class),
             'persistent' => false,
             'timezone' => 'UTC',
-            'encoding' => 'utf8mb4',
+            'encoding' => env('DATASOURCES_TEST_ENCODING','utf8mb4'),
             'flags' => [],
             'cacheMetadata' => true,
             'quoteIdentifiers' => env('DATASOURCES_QUOTE_IDENTIFIER', true),

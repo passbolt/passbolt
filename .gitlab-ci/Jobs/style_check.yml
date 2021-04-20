@@ -2,11 +2,29 @@
   stage: unit-test
   variables:
     PHP_VERSION: "7.3"
-  image: $CI_REGISTRY_IMAGE_TEST:$PHP_VERSION
+  image: php:$PHP_VERSION
   allow_failure: true
   script:
-    - composer install --dev --no-interaction
-    - composer cs-check
+  - apt-get update -yqq
+  - apt-get install mariadb-client -yqq
+  - apt-get install wget git unzip -yqq
+  - apt-get install libgpgme11 libgpgme-dev -yqq
+  - pecl install gnupg
+  - apt-get install zlib1g-dev libicu-dev -yqq
+  - docker-php-ext-install intl
+  - docker-php-ext-enable gnupg
+  - docker-php-ext-enable intl
+  - apt-get install libjpeg-dev libpng-dev libfreetype6-dev -yqq
+  - docker-php-ext-configure gd --with-freetype-dir=/usr --with-jpeg-dir=/usr
+  - docker-php-ext-install gd
+  - docker-php-ext-enable gd
+  - wget https://composer.github.io/installer.sig -O - -q | tr -d '\n' > installer.sig
+  - php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');"
+  - php -r "if (hash_file('SHA384', 'composer-setup.php') === file_get_contents('installer.sig')) { echo 'Installer verified'; } else { echo 'Installer corrupt'; unlink('composer-setup.php'); } echo PHP_EOL;"
+  - php composer-setup.php
+  - php -r "unlink('composer-setup.php'); unlink('installer.sig');"
+  - php composer.phar install --dev --no-interaction
+  - php composer.phar cs-check
 
 check-style-strict:
   extends: .cs-check

@@ -20,6 +20,7 @@ use App\Command\CleanupCommand;
 use App\Test\Factory\UserFactory;
 use Cake\TestSuite\ConsoleIntegrationTestTrait;
 use Cake\TestSuite\TestCase;
+use CakephpTestMigrator\Migrator;
 
 class CleanupCommandTest extends TestCase
 {
@@ -54,6 +55,7 @@ class CleanupCommandTest extends TestCase
      */
     public function testCleanupCommandFixMode()
     {
+        Migrator::migrate();
         UserFactory::make()->admin()->persist();
         $this->exec('passbolt cleanup');
         $this->assertExitSuccess();

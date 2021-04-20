@@ -25,6 +25,6 @@ class V2130SoftDeleteGpgKeysForSoftDeletedUsers extends AbstractMigration
     public function up()
     {
         // gpgkeys were not marked as soft deleted so we mark them as deleted if their associated user is soft deleted
-        $this->execute("UPDATE gpgkeys SET deleted=1 where user_id IN (SELECT id from users where deleted=1)");
+        $this->execute("UPDATE gpgkeys SET deleted=TRUE where user_id IN (SELECT id from users where deleted=TRUE)");
     }
 }

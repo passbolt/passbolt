@@ -18,6 +18,8 @@ namespace App\Test\TestCase\Command;
 
 use App\Command\MysqlExportCommand;
 use App\Test\Lib\Utility\PassboltCommandTestTrait;
+use Cake\Database\Driver\Mysql;
+use Cake\Database\Driver\Postgres;
 use Cake\Database\Exception\MissingDriverException;
 use Cake\Datasource\ConnectionManager;
 use Cake\TestSuite\ConsoleIntegrationTestTrait;
@@ -102,8 +104,13 @@ class MysqlExportCommandTest extends TestCase
         $dumpContent = file_get_contents($testDir . DS . $testFile);
         $tables = (new DatabaseConfiguration())->getTables();
         foreach ($tables as $table) {
-            $this->assertStringContainsString("DROP TABLE IF EXISTS `$table`;", $dumpContent);
-            $this->assertStringContainsString("CREATE TABLE `$table`", $dumpContent);
+            if (ConnectionManager::get('default')->getDriver() instanceof Mysql) {
+                $this->assertStringContainsString("DROP TABLE IF EXISTS `$table`;", $dumpContent);
+                $this->assertStringContainsString("CREATE TABLE `$table`", $dumpContent);
+            }
+            if (ConnectionManager::get('default')->getDriver() instanceof Postgres) {
+                $this->assertMatchesRegularExpression("/CREATE TABLE .*\.$table/", $dumpContent);
+            }
         }
 
         // With clear previous dump(s)

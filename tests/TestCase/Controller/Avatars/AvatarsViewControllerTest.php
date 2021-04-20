@@ -21,6 +21,7 @@ use App\Model\Table\AvatarsTable;
 use App\Test\Lib\AppIntegrationTestCase;
 use App\Test\Lib\Model\AvatarsModelTrait;
 use App\Utility\Filesystem\DirectoryUtility;
+use App\Utility\UuidFactory;
 use App\View\Helper\AvatarHelper;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\IntegrationTestTrait;
@@ -82,7 +83,8 @@ class AvatarsViewControllerTest extends AppIntegrationTestCase
      */
     public function testViewNonExistent(string $format)
     {
-        $this->get('avatars/view/1/' . $format);
+        $id = UuidFactory::uuid();
+        $this->get("avatars/view/$id/$format");
         $this->assertFileResponse($this->Avatars->getFallBackFileName($format));
     }
 

@@ -22,6 +22,7 @@ use App\Model\Table\AvatarsTable;
 use App\Model\Table\Dto\FindIndexOptions;
 use App\Utility\UuidFactory;
 use Cake\Core\Configure;
+use Cake\Database\Expression\IdentifierExpression;
 use Cake\I18n\FrozenTime;
 use Cake\ORM\Query;
 use Cake\Utility\Hash;
@@ -57,14 +58,12 @@ trait UsersFindersTrait
         }
 
         // Otherwise use a subquery to find all the users that are members of all the listed groups
+        $having = $query->getConnection()->getDriver()->quoteIdentifier('COUNT(GroupsUsers.user_id)');
         $subQuery = $this->GroupsUsers->find()
-            ->select([
-                'GroupsUsers.user_id',
-                'count' => $query->func()->count('GroupsUsers.user_id'),
-            ])
+            ->select('GroupsUsers.user_id')
             ->where(['GroupsUsers.group_id IN' => $groupsIds])
             ->group('GroupsUsers.user_id')
-            ->having(['count' => count($groupsIds)]);
+            ->having([$having => count($groupsIds)]);
 
         // Execute the sub query and extract the user ids.
         $matchingUserIds = Hash::extract($subQuery->toArray(), '{n}.user_id');
@@ -119,7 +118,7 @@ trait UsersFindersTrait
             ->select('Groups.id')
             ->where([
                 'Groups.deleted' => false,
-                'GroupsUsers.user_id = Users.id',
+                'GroupsUsers.user_id' => new IdentifierExpression('Users.id'),
             ]);
 
         // Use distinct to avoid duplicate as it can happen that a user is member of two groups which
@@ -129,7 +128,7 @@ trait UsersFindersTrait
             // Or on users who are members of a group which have permissions.
             ->where(
                 ['OR' => [
-                    ['PermissionsFilterAccess.aro_foreign_key = Users.id'],
+                    ['PermissionsFilterAccess.aro_foreign_key' => new IdentifierExpression('Users.id')],
                     ['PermissionsFilterAccess.aro_foreign_key IN' => $groupsSubquery],
                 ]]
             );
@@ -539,12 +538,11 @@ trait UsersFindersTrait
         $subQuery = $this->ActionLogs->find();
         $subQuery->select([
                 'user_id' => 'user_id',
-                'last_logged_in' => $subQuery->func()->max('ActionLogs.created'),
+                'last_logged_in' => $subQuery->func()->max(new IdentifierExpression('ActionLogs.created')),
             ])
             ->where([
-                'ActionLogs.action_id' => $loginActionId,
-                'ActionLogs.user_id IS NOT NULL',
-                'ActionLogs.status' => 1,
+                 'ActionLogs.action_id' => $loginActionId,
+                 'ActionLogs.status' => 1,
             ])
             ->group('user_id');
 
@@ -555,7 +553,9 @@ trait UsersFindersTrait
                 'table' => $subQuery,
                 'alias' => 'JoinedUsersLastLoggedIn',
                 'type' => 'LEFT',
-                'conditions' => 'Users.id = JoinedUsersLastLoggedIn.user_id',
+                'conditions' => [
+                    'Users.id' => new IdentifierExpression('JoinedUsersLastLoggedIn.user_id'),
+                ],
             ]);
 
         // The last logged in date should be formatted as other dates (FrozenTime).

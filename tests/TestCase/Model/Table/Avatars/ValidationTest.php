@@ -19,6 +19,7 @@ namespace App\Test\TestCase\Model\Table\Avatars;
 
 use App\Model\Table\AvatarsTable;
 use App\Test\Lib\Model\AvatarsModelTrait;
+use App\Utility\UuidFactory;
 use Cake\ORM\Exception\PersistenceFailedException;
 use Cake\ORM\TableRegistry;
 use Cake\TestSuite\TestCase;
@@ -129,7 +130,7 @@ class ValidationTest extends TestCase
     {
         $data = [
             'file' => $this->createUploadFile(),
-            'profile_id' => rand(),
+            'profile_id' => UuidFactory::uuid(),
         ];
         $avatar = $this->Avatars->newEntity($data);
 
